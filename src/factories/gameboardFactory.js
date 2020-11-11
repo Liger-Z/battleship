@@ -1,21 +1,23 @@
 import ship from './shipFactory';
+import PubSub from '../../node_modules/pubsub-js';
 
 /* Clicking on board tile should flip it's occupied status
 */
 
 const gameboard = () => {
   let board = [];
+  let shipList = [];
+  let attackList = [];
 
   const createBoard = () => {
     for (let x=0; x < 10; x++) {
       for (let y=0; y < 10; y++) {
         let newTile = tile(x, y, false, null, false);
         board.push(newTile);
-      }
-    }
-  }
+      };
+    };
+  };
   
-
   const placeShip = position => {
     const newShip = ship(position);
     
@@ -26,10 +28,11 @@ const gameboard = () => {
   
       board[index].occupied = true;
       board[index].ship = newShip;
-    })
+    });
 
+    shipList.push(newShip);
     return newShip;
-  }
+  };
 
   // check if co-ordinate matches co-ordinate of any ship
   const receiveAttack = coordinate => {
@@ -39,23 +42,47 @@ const gameboard = () => {
 
     if (board[index].occupied === true) {
       board[index].ship.hit();
-    }
+      board[index].ship.isSunk();
+    };
 
     board[index].attacked = true;
-  }
+    attackList.push(coordinate);
+  };
+
+  const allSunk = () => {
+    let counter = 0;
+    shipList.forEach(ship => {
+      if (ship.isSunk()) {
+        counter += 1;
+      };
+    });
+
+    if (counter === shipList.length) {
+      return true;
+    }
+
+    return false;
+  };
+
+  PubSub.subscribe('ATTACK', (msg, data) => {
+    receiveAttack(data);
+  });
 
   return {
     createBoard,
     placeShip,
     receiveAttack,
     board,
-  }
-}
+    allSunk,
+    attackList,
+  };
+};
 
+// tile is used as the building blocks for the gameboard
 const tile = (x, y, occupied, ship, attacked) => {
   const position = `${x}, ${y}`;
-  return {position, occupied, ship, attacked}
-}
+  return {position, occupied, ship, attacked};
+};
 
 // let board = [
 //   ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9'],

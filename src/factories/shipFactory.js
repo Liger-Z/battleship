@@ -13,7 +13,6 @@ const ship = (position) => {
     if (isSunk() === true) {
       throw new Error('This ship is already sunk');
     };
-    console.log('HIT')
     hitCount += 1;
   };
 
@@ -24,6 +23,7 @@ const ship = (position) => {
 
     return false;
   };
+
 
   return {
     position,
